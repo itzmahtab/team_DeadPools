@@ -10,7 +10,9 @@ git clone <repo-url>
 cd queuestorm-investigator
 npm install
 cp .env.example .env
-# Fill in OPEN_RUTER_API_KEY in .env
+# Fill in at least one API key in .env:
+#   OPENROUTER_API_KEY or OPEN_RUTER_API_KEY (for OpenRouter models)
+#   GEMINI_API_KEY (for Google Gemini fallback)
 ```
 
 ## Run
@@ -31,15 +33,18 @@ npm start          # production server
 ## Tech Stack
 
 - **Next.js** (React) for the API layer
-- **Claude claude-sonnet-4** (via OpenRouter) for evidence reasoning
+- **Multiple LLMs** (via OpenRouter + Google Gemini) for evidence reasoning
 - **Zod** for schema validation and enum enforcement
 - **Rule-based safety layer** (`lib/safety.js`) for hard safety checks
 
 ## AI / Model Usage
 
-- **Model**: anthropic/claude-sonnet-4 via OpenRouter API
+- **Primary**: Multiple free-tier models via OpenRouter (Nemotron, Gemma, Qwen, Llama, etc.)
+- **Fallback**: Google Gemini 2.5 Flash (if OpenRouter is unavailable)
+- **Ultimate fallback**: Deterministic safe response when all LLMs fail
 - The LLM handles: evidence matching, verdict classification, case_type routing, department routing, severity assessment, agent summary, next action, and customer reply generation.
 - The LLM is given the full complaint + transaction history and instructed to reason from the evidence before classifying.
+- Models are raced (first successful response wins) for faster results.
 
 ## Safety Logic
 
@@ -55,16 +60,21 @@ The safety layer is **deterministic** and does not depend on the LLM.
 
 ## Models
 
-| Model | Where | Why |
-|-------|-------|-----|
-| anthropic/claude-sonnet-4 | OpenRouter API (cloud) | Best reasoning for evidence analysis |
+| Model | Provider | Why |
+|-------|----------|-----|
+| nvidia/nemotron-3-ultra-550b | OpenRouter (free) | Primary reasoning |
+| google/gemma-4-31b-it | OpenRouter (free) | Lightweight fallback |
+| qwen/qwen3-next-80b-a3b | OpenRouter (free) | Alternative reasoning |
+| meta-llama/llama-3.3-70b-instruct | OpenRouter (free) | Broad coverage |
+| gemini-2.5-flash | Google AI (free) | Final fallback |
 
 ## Known Limitations
 
 - Bangla text reasoning depends on LLM language capability.
 - Ambiguous cases may need human review; the system flags them.
-- If the LLM API is unavailable, a safe fallback response is returned.
+- If all LLM APIs are unavailable, a safe fallback response is returned.
 - The system is a copilot only; no actions are taken autonomously.
+- Accuracy depends on the LLM; different models may give different results for the same case.
 
 ## Sample Request
 
@@ -74,6 +84,8 @@ POST /api/analyze-ticket
   "ticket_id": "TKT-001",
   "complaint": "I sent 5000 taka to the wrong number.",
   "language": "en",
+  "channel": "in_app_chat",
+  "user_type": "customer",
   "transaction_history": [
     {
       "transaction_id": "TXN-9101",
@@ -102,7 +114,8 @@ POST /api/analyze-ticket
   "customer_reply": "We have noted your concern about TXN-9101. Our dispute team will review and contact you through official channels. Please do not share your PIN or OTP with anyone.",
   "human_review_required": true,
   "confidence": 0.9,
-  "reason_codes": ["wrong_transfer", "transaction_match"]
+  "reason_codes": ["wrong_transfer", "transaction_match"],
+  "rationale": "Transaction TXN-9101 matches the complaint amount (5000 BDT) and is the only transfer in the history. Evidence supports the wrong-transfer claim."
 }
 ```
 
@@ -113,5 +126,10 @@ POST /api/analyze-ticket
 npm run dev
 
 # Terminal 2: run tests
-node test_local.js
+node test_local.js             # Local tests (sample_cases.json)
+node test_official.js          # Official sample cases (stricter validation)
+node test_edge_cases.js        # Edge cases (10 additional scenarios)
+node test_safety.js            # Safety & adversarial tests (12 cases)
+npm run test:all               # Run all official tests
+npm run test:legacy            # Run legacy local tests
 ```

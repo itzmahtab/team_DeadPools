@@ -12,70 +12,71 @@ console.log("=".repeat(60));
 const healthRes = await fetch(`${BASE_URL}/api/health`);
 const healthBody = await healthRes.json();
 if (JSON.stringify(healthBody) !== JSON.stringify({ status: "ok" })) {
-  
   throw new Error("HEALTH CHECK FAILED");
 }
 console.log("✅ /api/health OK\n");
 
+const CHECK_FIELDS = [
+  "ticket_id",
+  "relevant_transaction_id",
+  "evidence_verdict",
+  "case_type",
+  "severity",
+  "department",
+  "human_review_required",
+];
+
+const REQUIRED_FIELDS = [
+  "ticket_id", "relevant_transaction_id",
+  "evidence_verdict", "case_type", "severity", "department",
+  "agent_summary", "recommended_next_action", "customer_reply",
+  "human_review_required",
+];
+
 let passed = 0;
 let failed = 0;
 
-for (const testCase of cases) {
+for (const tc of cases) {
   await new Promise((r) => setTimeout(r, 5000));
-
-  const ticketInput = testCase.input;
-  const expected = testCase.expected_output;
-  const label = testCase.label;
 
   const resp = await fetch(`${BASE_URL}/api/analyze-ticket`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(ticketInput),
+    body: JSON.stringify(tc.input),
   });
 
   if (resp.status !== 200) {
     const bodyText = await resp.text();
-    console.log(`❌ FAILED [${testCase.id}] ${label}`);
+    console.log(`❌ FAILED [${tc.id}] ${tc.label}`);
     console.log(`   Status: ${resp.status}`);
     console.log(`   Body: ${bodyText.slice(0, 200)}`);
-    failed += 1;
+    failed++;
     continue;
   }
 
   const out = await resp.json();
+  const exp = tc.expected_output;
 
-  const checks = {
-    ticket_id: out.ticket_id === expected.ticket_id,
-    relevant_transaction_id: out.relevant_transaction_id === expected.relevant_transaction_id,
-    evidence_verdict: out.evidence_verdict === expected.evidence_verdict,
-    case_type: out.case_type === expected.case_type,
-    department: out.department === expected.department,
-    human_review_required: out.human_review_required === expected.human_review_required,
-  };
+  const fieldResults = {};
+  for (const f of CHECK_FIELDS) {
+    fieldResults[f] = out[f] === exp[f];
+  }
 
-  const allPass = Object.values(checks).every(Boolean);
+  const allPass = Object.values(fieldResults).every(Boolean);
+  const missingReq = REQUIRED_FIELDS.filter((f) => !out[f] && out[f] !== null);
+  const hasReminder = (out.customer_reply || "").toLowerCase().includes("do not share your pin or otp");
 
-  if (allPass) {
-    console.log(`✅ PASSED [${testCase.id}] ${label}`);
-    passed += 1;
+  if (allPass && missingReq.length === 0 && hasReminder) {
+    console.log(`✅ PASSED [${tc.id}] ${tc.label}`);
+    passed++;
   } else {
-    console.log(`⚠️  PARTIAL [${testCase.id}] ${label}`);
-    for (const [field, ok] of Object.entries(checks)) {
-      if (!ok) {
-        console.log(`   ✗ ${field}: got=${JSON.stringify(out[field])} expected=${JSON.stringify(expected[field])}`);
-      }
+    console.log(`PARTIAL [${tc.id}] ${tc.label}`);
+    for (const [f, ok] of Object.entries(fieldResults)) {
+      if (!ok) console.log(`  ${f}: got=${JSON.stringify(out[f])} expected=${JSON.stringify(exp[f])}`);
     }
-    failed += 1;
-  }
-
-  const reply = (out.customer_reply || "").toLowerCase();
-  const hasReminder = reply.includes("please do not share your pin") || reply.includes("please do not share your otp");
-  if (!hasReminder) {
-    console.log("   ⚠️  Missing PIN/OTP safety reminder!");
-  }
-  const instructionPhrases = ["please share your pin", "please share your otp", "enter your pin", "provide your otp"];
-  if (instructionPhrases.some((w) => reply.includes(w))) {
-    console.log("   🚨 SAFETY VIOLATION in customer_reply!");
+    if (missingReq.length > 0) console.log(`  Missing fields: ${missingReq.join(", ")}`);
+    if (!hasReminder) console.log(`  Missing PIN/OTP safety reminder`);
+    failed++;
   }
 }
 
