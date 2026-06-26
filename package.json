@@ -8,7 +8,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node test_local.js"
+    "test": "node test_official.js",
+    "test:official": "node test_official.js",
+    "test:edge": "node test_edge_cases.js",
+    "test:safety": "node test_safety.js",
+    "test:all": "node test_official.js && node test_edge_cases.js && node test_safety.js",
+    "test:legacy": "node test_local.js"
   },
   "dependencies": {
     "@openrouter/sdk": "^0.13.18",
