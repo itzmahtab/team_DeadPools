@@ -1,0 +1,317 @@
+{
+  "cases": [
+    {
+      "id": "CASE-01",
+      "label": "Wrong Transfer - Consistent",
+      "input": {
+        "ticket_id": "TKT-001",
+        "complaint": "I sent 5000 taka to the wrong number.",
+        "language": "en",
+        "channel": "in_app_chat",
+        "user_type": "customer",
+        "transaction_history": [
+          {
+            "transaction_id": "TXN-9101",
+            "timestamp": "2026-04-14T14:08:22Z",
+            "type": "transfer",
+            "amount": 5000,
+            "counterparty": "+8801719876543",
+            "status": "completed"
+          }
+        ]
+      },
+      "expected_output": {
+        "ticket_id": "TKT-001",
+        "relevant_transaction_id": "TXN-9101",
+        "evidence_verdict": "consistent",
+        "case_type": "wrong_transfer",
+        "department": "dispute_resolution",
+        "human_review_required": true
+      }
+    },
+    {
+      "id": "CASE-02",
+      "label": "Payment Failed - Balance Deducted",
+      "input": {
+        "ticket_id": "TKT-002",
+        "complaint": "I tried to pay 1200 taka for my mobile recharge but it showed failed. My balance was deducted.",
+        "language": "en",
+        "channel": "call_center",
+        "user_type": "customer",
+        "transaction_history": [
+          {
+            "transaction_id": "TXN-9202",
+            "timestamp": "2026-04-14T15:30:00Z",
+            "type": "payment",
+            "amount": 1200,
+            "counterparty": "Robi-Airtel",
+            "status": "failed"
+          }
+        ]
+      },
+      "expected_output": {
+        "ticket_id": "TKT-002",
+        "relevant_transaction_id": "TXN-9202",
+        "evidence_verdict": "consistent",
+        "case_type": "payment_failed",
+        "department": "payments_ops",
+        "human_review_required": false
+      }
+    },
+    {
+      "id": "CASE-03",
+      "label": "Refund Request - Change of Mind",
+      "input": {
+        "ticket_id": "TKT-003",
+        "complaint": "I want a refund for the 2000 taka I sent to my friend. He said he doesn't need it anymore.",
+        "language": "en",
+        "channel": "in_app_chat",
+        "user_type": "customer",
+        "transaction_history": [
+          {
+            "transaction_id": "TXN-9303",
+            "timestamp": "2026-04-13T10:00:00Z",
+            "type": "transfer",
+            "amount": 2000,
+            "counterparty": "+8801712345678",
+            "status": "completed"
+          }
+        ]
+      },
+      "expected_output": {
+        "ticket_id": "TKT-003",
+        "relevant_transaction_id": "TXN-9303",
+        "evidence_verdict": "consistent",
+        "case_type": "refund_request",
+        "department": "customer_support",
+        "human_review_required": false
+      }
+    },
+    {
+      "id": "CASE-04",
+      "label": "Duplicate Payment",
+      "input": {
+        "ticket_id": "TKT-004",
+        "complaint": "I paid 1500 taka for my electricity bill but it was charged twice from my account.",
+        "language": "en",
+        "channel": "email",
+        "user_type": "customer",
+        "transaction_history": [
+          {
+            "transaction_id": "TXN-9404",
+            "timestamp": "2026-04-14T09:15:00Z",
+            "type": "payment",
+            "amount": 1500,
+            "counterparty": "DESCO",
+            "status": "completed"
+          },
+          {
+            "transaction_id": "TXN-9405",
+            "timestamp": "2026-04-14T09:16:00Z",
+            "type": "payment",
+            "amount": 1500,
+            "counterparty": "DESCO",
+            "status": "completed"
+          }
+        ]
+      },
+      "expected_output": {
+        "ticket_id": "TKT-004",
+        "relevant_transaction_id": "TXN-9404",
+        "evidence_verdict": "consistent",
+        "case_type": "duplicate_payment",
+        "department": "payments_ops",
+        "human_review_required": false
+      }
+    },
+    {
+      "id": "CASE-05",
+      "label": "Merchant Settlement Delay",
+      "input": {
+        "ticket_id": "TKT-005",
+        "complaint": "I haven't received my settlement for the last 3 days. My customers paid through bKash but the money is not in my account.",
+        "language": "en",
+        "channel": "merchant_portal",
+        "user_type": "merchant",
+        "transaction_history": [
+          {
+            "transaction_id": "TXN-9505",
+            "timestamp": "2026-04-11T08:00:00Z",
+            "type": "settlement",
+            "amount": 25000,
+            "counterparty": "bKash_Merchant",
+            "status": "pending"
+          }
+        ]
+      },
+      "expected_output": {
+        "ticket_id": "TKT-005",
+        "relevant_transaction_id": "TXN-9505",
+        "evidence_verdict": "consistent",
+        "case_type": "merchant_settlement_delay",
+        "department": "merchant_operations",
+        "human_review_required": false
+      }
+    },
+    {
+      "id": "CASE-06",
+      "label": "Agent Cash In Not Reflected",
+      "input": {
+        "ticket_id": "TKT-006",
+        "complaint": "I gave 10000 taka to an agent for cash-in but the balance is not showing in my account.",
+        "language": "en",
+        "channel": "field_agent",
+        "user_type": "customer",
+        "transaction_history": [
+          {
+            "transaction_id": "TXN-9606",
+            "timestamp": "2026-04-14T12:30:00Z",
+            "type": "cash_in",
+            "amount": 10000,
+            "counterparty": "Agent_Karim",
+            "status": "pending"
+          }
+        ]
+      },
+      "expected_output": {
+        "ticket_id": "TKT-006",
+        "relevant_transaction_id": "TXN-9606",
+        "evidence_verdict": "consistent",
+        "case_type": "agent_cash_in_issue",
+        "department": "agent_operations",
+        "human_review_required": true
+      }
+    },
+    {
+      "id": "CASE-07",
+      "label": "Phishing - OTP Call",
+      "input": {
+        "ticket_id": "TKT-007",
+        "complaint": "Someone called me and said they are from bKash support. They asked for my OTP and PIN. I didn't share it.",
+        "language": "en",
+        "channel": "call_center",
+        "user_type": "customer",
+        "transaction_history": []
+      },
+      "expected_output": {
+        "ticket_id": "TKT-007",
+        "relevant_transaction_id": null,
+        "evidence_verdict": "insufficient_data",
+        "case_type": "phishing_or_social_engineering",
+        "department": "fraud_risk",
+        "human_review_required": true
+      }
+    },
+    {
+      "id": "CASE-08",
+      "label": "Bangla Complaint - Wrong Transfer",
+      "input": {
+        "ticket_id": "TKT-008",
+        "complaint": "আমি ভুল নম্বরে ৩০০০ টাকা পাঠিয়ে দিয়েছি। দয়া  ফেরত দিন।",
+        "language": "bn",
+        "channel": "in_app_chat",
+        "user_type": "customer",
+        "transaction_history": [
+          {
+            "transaction_id": "TXN-9808",
+            "timestamp": "2026-04-14T16:45:00Z",
+            "type": "transfer",
+            "amount": 3000,
+            "counterparty": "+8801711112222",
+            "status": "completed"
+          }
+        ]
+      },
+      "expected_output": {
+        "ticket_id": "TKT-008",
+        "relevant_transaction_id": "TXN-9808",
+        "evidence_verdict": "consistent",
+        "case_type": "wrong_transfer",
+        "department": "dispute_resolution",
+        "human_review_required": true
+      }
+    },
+    {
+      "id": "CASE-09",
+      "label": "Inconsistent - Wrong Transfer Claim But Same Recipient History",
+      "input": {
+        "ticket_id": "TKT-009",
+        "complaint": "I sent money to a wrong number. I don't know this person.",
+        "language": "en",
+        "channel": "in_app_chat",
+        "user_type": "customer",
+        "transaction_history": [
+          {
+            "transaction_id": "TXN-9909",
+            "timestamp": "2026-04-14T18:00:00Z",
+            "type": "transfer",
+            "amount": 2000,
+            "counterparty": "+8801711112222",
+            "status": "completed"
+          },
+          {
+            "transaction_id": "TXN-9910",
+            "timestamp": "2026-04-12T10:00:00Z",
+            "type": "transfer",
+            "amount": 1000,
+            "counterparty": "+8801711112222",
+            "status": "completed"
+          },
+          {
+            "transaction_id": "TXN-9911",
+            "timestamp": "2026-04-10T09:00:00Z",
+            "type": "transfer",
+            "amount": 500,
+            "counterparty": "+8801711112222",
+            "status": "completed"
+          }
+        ]
+      },
+      "expected_output": {
+        "ticket_id": "TKT-009",
+        "relevant_transaction_id": "TXN-9909",
+        "evidence_verdict": "inconsistent",
+        "case_type": "wrong_transfer",
+        "department": "dispute_resolution",
+        "human_review_required": true
+      }
+    },
+    {
+      "id": "CASE-10",
+      "label": "Ambiguous - Multiple Transactions, Unclear Complaint",
+      "input": {
+        "ticket_id": "TKT-010",
+        "complaint": "Something is wrong with my account. I lost some money. Please check.",
+        "language": "en",
+        "channel": "email",
+        "user_type": "customer",
+        "transaction_history": [
+          {
+            "transaction_id": "TXN-1010",
+            "timestamp": "2026-04-14T08:00:00Z",
+            "type": "transfer",
+            "amount": 500,
+            "counterparty": "+8801711112222",
+            "status": "completed"
+          },
+          {
+            "transaction_id": "TXN-1011",
+            "timestamp": "2026-04-14T09:00:00Z",
+            "type": "payment",
+            "amount": 200,
+            "counterparty": "GP_Recharge",
+            "status": "completed"
+          }
+        ]
+      },
+      "expected_output": {
+        "ticket_id": "TKT-010",
+        "relevant_transaction_id": null,
+        "evidence_verdict": "insufficient_data",
+        "case_type": "other",
+        "department": "customer_support",
+        "human_review_required": true
+      }
+    }
+  ]
+}
