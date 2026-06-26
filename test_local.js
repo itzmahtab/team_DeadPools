@@ -12,6 +12,7 @@ console.log("=".repeat(60));
 const healthRes = await fetch(`${BASE_URL}/api/health`);
 const healthBody = await healthRes.json();
 if (JSON.stringify(healthBody) !== JSON.stringify({ status: "ok" })) {
+  
   throw new Error("HEALTH CHECK FAILED");
 }
 console.log("✅ /api/health OK\n");
