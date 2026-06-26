@@ -21,7 +21,7 @@ let passed = 0;
 let failed = 0;
 
 for (const testCase of cases) {
-  await new Promise((r) => setTimeout(r, 3000));
+  await new Promise((r) => setTimeout(r, 5000));
 
   const ticketInput = testCase.input;
   const expected = testCase.expected_output;
